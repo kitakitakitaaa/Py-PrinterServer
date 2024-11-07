@@ -4,6 +4,7 @@ from PIL import Image, ImageWin, ImageDraw, ImageFont
 import socket
 import configparser
 import os
+import datetime
 
 class PrinterServer:
     def __init__(self):
@@ -80,27 +81,47 @@ class Printer:
         
         return result
         
-    def add_text_to_image(self, image, text):
-        """画像にテキストを追加する"""
-        draw = ImageDraw.Draw(image)
-        # フォントサイズを大きく設定（48pt）
-        try:
-            font = ImageFont.truetype('msgothic.ttc', 82)  # MS Gothicフォント、サイズを48に変更
-        except:
-            font = ImageFont.load_default()
+    def add_text_to_image(self, image, text=""):
+        """画像にテキストとフィルター画像を追加する"""
+        # 元画像をRGBA形式に変換
+        final_image = image.convert('RGBA')
         
-        # テキストを画像の上部に配置
-        text_bbox = draw.textbbox((0, 0), text, font=font)
-        text_width = text_bbox[2] - text_bbox[0]
-        text_height = text_bbox[3] - text_bbox[1]
+        # フィルター画像のパスをチェック
+        filter_path = './Assets/filter.png'
+        if os.path.exists(filter_path):
+            try:
+                filter_img = Image.open(filter_path).convert('RGBA')
+                # フィルター画像のサイズを元画像のサイズに合わせてリサイズ
+                filter_img = filter_img.resize(final_image.size)
+                
+                # 画像を合成
+                final_image = Image.alpha_composite(final_image, filter_img)
+                
+            except Exception as e:
+                print(f"フィルター画像の処理でエラーが発生しました: {e}")
+        else:
+            print("フィルター画像が見つかりません")
         
-        x = (image.width - text_width) // 2  # 中央揃え
-        y = 20  # 上部に配置（20pxの余白）
+        # RGBモードに変換
+        final_image = final_image.convert('RGB')
         
-        # 背景なしでテキストを直接描画
-        draw.text((x, y), text, font=font, fill='black')
+        # テキストが存在する場合のみテキストを描画
+        if text.strip():  # 空白文字のみの場合もスキップ
+            draw = ImageDraw.Draw(final_image)
+            try:
+                font = ImageFont.truetype('msgothic.ttc', 82)
+            except:
+                font = ImageFont.load_default()
+            
+            text_bbox = draw.textbbox((0, 0), text, font=font)
+            text_width = text_bbox[2] - text_bbox[0]
+            
+            x = (image.width - text_width) // 2
+            y = 20
+            
+            draw.text((x, y), text, font=font, fill='black')
         
-        return image
+        return final_image
 
     def print_image_with_text(self, image_path, x_mm, y_mm, text=""):
         """テキストを追加した画像を印刷する"""
@@ -116,10 +137,19 @@ class Printer:
         hDC.StartDoc(image_path)
         hDC.StartPage()
         
-        # 画像を開いてテキストを追加
+        # 画像を開いてフィルター処理とテキストを追加
         bmp = Image.open(image_path)
-        if text:
-            bmp = self.add_text_to_image(bmp, text)
+        bmp = self.add_text_to_image(bmp, text)  # テキストの有無に関係なく処理を実行
+            
+        # 印刷用の画像を保存
+        # output_dir = os.path.join(os.path.dirname(image_path), 'printed_images')
+        # os.makedirs(output_dir, exist_ok=True)
+        
+        # base_name = os.path.splitext(os.path.basename(image_path))[0]
+        # timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+        # output_path = os.path.join(output_dir, f'{base_name}_{timestamp}.png')
+        # bmp.save(output_path)
+        # print(f"印刷用画像を保存しました: {output_path}")
             
         dib = ImageWin.Dib(bmp)
         scaled_width, scaled_height = self.trans_mm_to_pixel(hDC, x_mm, y_mm)
