@@ -109,17 +109,27 @@ class Printer:
         if text.strip():  # 空白文字のみの場合もスキップ
             draw = ImageDraw.Draw(final_image)
             try:
-                font = ImageFont.truetype('msgothic.ttc', 82)
-            except:
-                font = ImageFont.load_default()
+                # フォントパスを変更
+                font = ImageFont.truetype('./Assets/Font/07にくまるフォント.otf', 32)
+            except Exception as e:
+                print(f"フォントの読み込みに失敗しました: {e}")
+                try:
+                    font = ImageFont.truetype('msgothic.ttc', 70)
+                except:
+                    font = ImageFont.load_default()
             
+            # テキストのサイズを取得
             text_bbox = draw.textbbox((0, 0), text, font=font)
             text_width = text_bbox[2] - text_bbox[0]
+            text_height = text_bbox[3] - text_bbox[1]
             
+            # テキストのX座標（中央揃え）
             x = (image.width - text_width) // 2
-            y = 20
+            # テキストのY座標（下部に配置、余白20px）
+            y = image.height - text_height - 112
             
-            draw.text((x, y), text, font=font, fill='black')
+            # テキストカラーを濃いグレー（RGB: 80, 80, 80）に変更
+            draw.text((x, y), text, font=font, fill=(80, 80, 80))
         
         return final_image
 
