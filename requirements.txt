@@ -1,3 +1,5 @@
 pillow==10.2.0
 pywin32==306
 configparser
+flask==3.0.2
+win32printing==0.1.3
