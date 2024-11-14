@@ -5,6 +5,7 @@ import socket
 import configparser
 import os
 import sys
+import datetime
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
@@ -134,18 +135,20 @@ class Printer:
                 print(f"フォントの読み込みに失敗しました: {e}")
                 font = ImageFont.truetype('msgothic.ttc', 70)
             
-            # テキストの配置を計算
-            letter_spacing = 5
-            total_width = sum([(draw.textbbox((0, 0), char, font=font)[2]) + letter_spacing for char in text]) - letter_spacing
-            x = (image.width - total_width) // 2
+            # 固定の文字間隔を設定
+            char_spacing = 40  # 文字間隔を固定値で設定
+            text_length = len(text)
+            total_width = char_spacing * (text_length - 1)  # 全体の幅を計算
+            
+            # 開始位置を計算（中央揃え）
+            start_x = (image.width - total_width) // 2
             baseline = image.height - 105
             
-            # 文字を1文字ずつ描画
-            current_x = x
-            for char in text:
-                char_width = draw.textbbox((0, 0), char, font=font)[2]
-                draw.text((current_x, baseline), char, font=font, fill=(0, 0, 0), anchor="ms")
-                current_x += char_width + letter_spacing
+            # 文字を等間隔で配置
+            for i, char in enumerate(text):
+                x = start_x + (i * char_spacing)
+                # anchorをleftに変更して左揃えで配置
+                draw.text((x, baseline), char, font=font, fill=(0, 0, 0), anchor="ms")
         
         return final_image
 
@@ -167,11 +170,11 @@ class Printer:
         output_dir = os.path.join(os.path.dirname(image_path), 'printed_images')
         os.makedirs(output_dir, exist_ok=True)
         
-        # base_name = os.path.splitext(os.path.basename(image_path))[0]
-        # timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-        # output_path = os.path.join(output_dir, f'{base_name}_{timestamp}.png')
-        # bmp.save(output_path)
-        # print(f"印刷用画像を保存しました: {output_path}")
+        base_name = os.path.splitext(os.path.basename(image_path))[0]
+        timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+        output_path = os.path.join(output_dir, f'{base_name}_{timestamp}.png')
+        bmp.save(output_path)
+        print(f"印刷用画像を保存しました: {output_path}")
             
         dib = ImageWin.Dib(bmp)
         scaled_width, scaled_height = self.trans_mm_to_pixel(hDC, x_mm, y_mm)
@@ -187,11 +190,11 @@ class Printer:
         
         print(f"印刷位置: ({x1}, {y1}) -> ({x2}, {y2})")
         
-        dib.draw(hDC.GetHandleOutput(), (x1, y1, x2, y2))
+        # dib.draw(hDC.GetHandleOutput(), (x1, y1, x2, y2))
         
-        hDC.EndPage()
-        hDC.EndDoc()
-        hDC.DeleteDC()
+        # hDC.EndPage()
+        # hDC.EndDoc()
+        # hDC.DeleteDC()
 
 if __name__ == "__main__":
     server = PrinterServer()
