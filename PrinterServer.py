@@ -55,12 +55,15 @@ class PrinterServer:
                     received_data = data.decode('utf-8').strip().split('|')
                     image_path = received_data[0]
                     text = received_data[1] if len(received_data) > 1 else ""
+                    x_mm = float(received_data[2]) if len(received_data) > 2 else 76
+                    y_mm = float(received_data[3]) if len(received_data) > 3 else 76
                     
                     print(f"受信: {addr}から")
                     print(f"画像パス: {image_path}")
                     print(f"テキスト: {text}")
+                    print(f"x_mm: {x_mm}, y_mm: {y_mm}")
                     
-                    self.printer.print_image_with_text(image_path, 76, 76, text)
+                    self.printer.print_image_with_text(image_path, x_mm, y_mm, text)
                         
                 except Exception as e:
                     print(f"エラーが発生しました: {e}")
@@ -167,14 +170,14 @@ class Printer:
         bmp = Image.open(image_path)
         bmp = self.add_text_to_image(bmp, text)
             
-        output_dir = os.path.join(os.path.dirname(image_path), 'printed_images')
-        os.makedirs(output_dir, exist_ok=True)
+        # output_dir = os.path.join(os.path.dirname(image_path), 'printed_images')
+        # os.makedirs(output_dir, exist_ok=True)
         
-        base_name = os.path.splitext(os.path.basename(image_path))[0]
-        timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-        output_path = os.path.join(output_dir, f'{base_name}_{timestamp}.png')
-        bmp.save(output_path)
-        print(f"印刷用画像を保存しました: {output_path}")
+        # base_name = os.path.splitext(os.path.basename(image_path))[0]
+        # timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+        # output_path = os.path.join(output_dir, f'{base_name}_{timestamp}.png')
+        # bmp.save(output_path)
+        # print(f"印刷用画像を保存しました: {output_path}")
             
         dib = ImageWin.Dib(bmp)
         scaled_width, scaled_height = self.trans_mm_to_pixel(hDC, x_mm, y_mm)
@@ -190,11 +193,11 @@ class Printer:
         
         print(f"印刷位置: ({x1}, {y1}) -> ({x2}, {y2})")
         
-        # dib.draw(hDC.GetHandleOutput(), (x1, y1, x2, y2))
+        dib.draw(hDC.GetHandleOutput(), (x1, y1, x2, y2))
         
-        # hDC.EndPage()
-        # hDC.EndDoc()
-        # hDC.DeleteDC()
+        hDC.EndPage()
+        hDC.EndDoc()
+        hDC.DeleteDC()
 
 if __name__ == "__main__":
     server = PrinterServer()
