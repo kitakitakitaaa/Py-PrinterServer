@@ -170,14 +170,15 @@ class Printer:
         bmp = Image.open(image_path)
         bmp = self.add_text_to_image(bmp, text)
             
-        # output_dir = os.path.join(os.path.dirname(image_path), 'printed_images')
-        # os.makedirs(output_dir, exist_ok=True)
+        # 実行ファイルと同じディレクトリに保存するように変更
+        output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'printed_images')
+        os.makedirs(output_dir, exist_ok=True)
         
-        # base_name = os.path.splitext(os.path.basename(image_path))[0]
-        # timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-        # output_path = os.path.join(output_dir, f'{base_name}_{timestamp}.png')
-        # bmp.save(output_path)
-        # print(f"印刷用画像を保存しました: {output_path}")
+        base_name = os.path.splitext(os.path.basename(image_path))[0]
+        timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+        output_path = os.path.join(output_dir, f'{base_name}_{timestamp}.png')
+        bmp.save(output_path)
+        print(f"印刷用画像を保存しました: {output_path}")
             
         dib = ImageWin.Dib(bmp)
         scaled_width, scaled_height = self.trans_mm_to_pixel(hDC, x_mm, y_mm)
