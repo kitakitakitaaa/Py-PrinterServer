@@ -55,8 +55,8 @@ class PrinterServer:
                     received_data = data.decode('utf-8').strip().split('|')
                     image_path = received_data[0]
                     text = received_data[1] if len(received_data) > 1 else ""
-                    x_mm = float(received_data[2]) if len(received_data) > 2 else 76
-                    y_mm = float(received_data[3]) if len(received_data) > 3 else 76
+                    x_mm = float(received_data[2]) if len(received_data) > 2 else 60
+                    y_mm = float(received_data[3]) if len(received_data) > 3 else 60
                     
                     print(f"受信: {addr}から")
                     print(f"画像パス: {image_path}")
@@ -145,7 +145,7 @@ class Printer:
             
             # 開始位置を計算（中央揃え）
             start_x = (image.width - total_width) // 2
-            baseline = image.height - 105
+            baseline = image.height - 140
             
             # 文字を等間隔で配置
             for i, char in enumerate(text):
